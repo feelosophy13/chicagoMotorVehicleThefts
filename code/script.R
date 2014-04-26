@@ -51,7 +51,10 @@ colnames(mvtByDay) <- c('Day', 'Count')
 mvtByDay$Day <- factor(mvtByDay$Day,
                            levels = c('Monday', 'Tuesday', 'Wednesday', 'Thursday',
                                       'Friday', 'Saturday', 'Sunday'))
-
+mvtByHour <- as.data.frame(table(mvt$Hour)) 
+mvtByHour
+colnames(mvtByHour) <- c('Hour', 'Count')
+mvtByHour$Hour <- as.numeric(as.character(mvtByHour$Hour))
 
 #### plot motor vehicle thefts by year
 library(ggplot2)
@@ -75,6 +78,24 @@ dev.copy(png, './figures/line_graph_motor_vehicle_thefts_by_month_2001-2012.png'
 dev.off()
 
 
+#### plot motor vehicle thefts by day of the week
+ggplot(mvtByDay, aes(x = Day, y = Count)) + 
+  geom_bar(aes(fill = Day), stat = 'identity') +
+  theme(axis.title.x = element_blank()) + 
+  ggtitle('Motor Vehicle Thefts by Day of the Week (2001 - 2012)')
+dev.copy(png, './figures/barchart_motor_vehicle_thefts_by_day_of_the_week_2001-2012.png')  
+dev.off()
+
+
+
+#### plot motor vehicle thefts by hour
+ggplot(mvtByHour, aes(x=Hour, y=Count)) + 
+  geom_line(aes(group=1), size=2, alpha=0.5, color = 'darkgreen') +
+  ggtitle('Motor Vehicle Thefts by Hour (2001 - 2012)') 
+dev.copy(png, './figures/line_graph_motor_vehicle_thefts_by_hour_2001-2012.png')
+dev.off()
+
+
 
 #### data frame for motor vehicle thefts by year and month
 mvtByMonthYear <- as.data.frame(table(mvt$Month, mvt$Year))
@@ -86,6 +107,7 @@ mvtByMonthYear$Month <- factor(mvtByMonthYear$Month,
                                levels = c('January', 'February', 'March', 'April',
                                           'May', 'June', 'July', 'August', 'September',
                                           'October', 'November', 'December'))
+head(mvtByMonthYear)
 
 
 
@@ -101,17 +123,8 @@ dev.copy(png, './figures/heatmap_motor_vehicle_thefts_by_month_and_year_2001-201
 dev.off()
 
 
-#### plot motor vehicle thefts by days of the week
-ggplot(mvtByDay, aes(x = Day, y = Count)) + 
-  geom_bar(aes(fill = Day), stat = 'identity') +
-  theme(axis.title.x = element_blank()) + 
-  ggtitle('Motor Vehicle Thefts by Days of the Week (2001 - 2012)')
-dev.copy(png, './figures/barchart_motor_vehicle_thefts_by_days_of_the_week_2001-2012.png')  
-dev.off()
 
-
-
-#### data frame for motor vehicle thefts by days of the week and hour
+#### data frame for motor vehicle thefts by day of the week and hour
 mvtByHourDay <- as.data.frame(table(mvt$Day, mvt$Hour))
 head(mvtByHourDay)
 colnames(mvtByHourDay) <- c('Day', 'Hour', 'Count')
@@ -119,19 +132,7 @@ mvtByHourDay$Day <- factor(mvtByHourDay$Day,
                                levels = c('Monday', 'Tuesday', 'Wednesday', 'Thursday',
                                           'Friday', 'Saturday', 'Sunday'))
 mvtByHourDay$Hour <- as.numeric(as.character(mvtByHourDay$Hour))
-mvtByHourDay$DayType <- ifelse((mvtByHourDay$Day == "Saturday") | (mvtByHourDay$Day == "Sunday"), 
-                               "Weekend", "Weekday")
 head(mvtByHourDay)
-
-
-
-#### plot motor vehicle thefts by hour and by weekend vs. weekday
-ggplot(mvtByHourDay, aes(x=Hour, y=Count)) + 
-  geom_line(aes(group=Day, color=DayType), size=2, alpha=0.5) +
-  ggtitle('Motor Vehicle Thefts by Hour (2001 - 2012)') + 
-  guides(color = guide_legend(title = 'Day Type'))
-dev.copy(png, './figures/line_graph_motor_vehicle_thefts_by_hour_2001-2012.png')
-dev.off()
 
 
 
@@ -160,13 +161,27 @@ library(ggmap)
 #### load a map of Chicago into R and view
 chicago <- get_map(location = "chicago", zoom = 11)
 ggmap(chicago)
+dev.copy(png, './figures/map0_chicago.png')
+dev.off()
+
+
+
+#### plot the motor vehicle thefts (raw)
+ggmap(chicago) + 
+  geom_point(data = mvt, 
+             aes(x = Longitude, y = Latitude))
+dev.copy(png, './figures/map1_motor_vehicle_thefts_raw_points_2001-2012.png')
+dev.off()
 
 
 
 #### plot the first 1000 motor vehicle thefts:
+nrow(mvt)
 ggmap(chicago) + 
   geom_point(data = mvt[1:1000,], 
              aes(x = Longitude, y = Latitude))
+dev.copy(png, './figures/map2_motor_vehicle_thefts_first_1000_2001-2012.png')
+dev.off()
 
 
 
@@ -178,7 +193,7 @@ colnames(mvtByLongLat) <- c('Longitude', 'Latitude', 'Count')
 
 
 
-#### convert the Longitude and Latitude variable to numbers
+#### convert the Longitude and Latitude variables to numberic variables
 str(mvtByLongLat)
 mvtByLongLat$Longitude <- as.numeric(as.character(mvtByLongLat$Longitude))
 mvtByLongLat$Latitude <- as.numeric(as.character(mvtByLongLat$Latitude))
@@ -189,12 +204,14 @@ head(mvtByLongLat)
 ggmap(chicago) + 
   geom_point(data = mvtByLongLat,
              aes(x = Longitude, y = Latitude, color = Count, size = Count))
-
+dev.copy(png, './figures/map3_motor_vehicle_thefts_subregions_points_2001-2012.png') 
+dev.off()
 
 
 #### remove 0-count points and re-plot with better color scheme
 head(mvtByLongLat)
 mvtByLongLat <- subset(mvtByLongLat, Count != 0)
+head(mvtByLongLat)
 
 ggmap(chicago) + 
   geom_point(data = mvtByLongLat,
@@ -203,7 +220,7 @@ ggmap(chicago) +
   xlab('Longitude') + 
   ylab('Latitude') + 
   ggtitle('Map of Motor Vehicle Thefts (2001 - 2012)')
-dev.copy(png, './figures/map1_motor_vehicle_thefts_2001-2012.png')
+dev.copy(png, './figures/map4_motor_vehicle_thefts_subregions_points_refined_2001-2012.png')
 dev.off()
 
 
@@ -212,15 +229,21 @@ dev.off()
 ggmap(chicago) + 
   geom_tile(data = mvtByLongLat,
             aes(x = Longitude, y = Latitude))
+dev.copy(png, './figures/map5_motor_vehicle_thefts_subregions_tile_raw_2001-2012.png')
+dev.off()
 
 ggmap(chicago) + 
   geom_tile(data = mvtByLongLat,
             aes(x = Longitude, y = Latitude, alpha = Count))
+dev.copy(png, './figures/map6_motor_vehicle_thefts_subregions_tile_opacity_2001-2012.png')
+dev.off()
 
 ggmap(chicago) + 
   geom_tile(data = mvtByLongLat,
             aes(x = Longitude, y = Latitude, alpha = Count),
             fill = 'red')
+dev.copy(png, './figures/map7_motor_vehicle_thefts_subregions_tile_red_opacity_2001-2012.png')
+dev.off()
 
 ggmap(chicago) + 
   geom_tile(data = mvtByLongLat,
@@ -229,5 +252,5 @@ ggmap(chicago) +
   xlab('Longitude') + 
   ylab('Latitude') +
   ggtitle('Map of Motor Vehicle Thefts (2001 - 2012)')
-dev.copy(png, './figures/map2_motor_vehicle_thefts_2001-2012.png')
+dev.copy(png, './figures/map8_motor_vehicle_thefts_subregions_tile_final_2001-2012.png')
 dev.off()

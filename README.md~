@@ -173,7 +173,7 @@ This data comes from the <a href='http://gis.chicagopolice.org/' target='_blank'
 
 <h6>3. Plot the first 1000 cases of motor vehicle thefts in the data frame</h6>
 
-![Alt text](./figures/map2_motor_vehicle_thefts_first_1000_2001-2012.png)
+![Alt text](./figures/map0_motor_vehicle_thefts_first_1000_2001-2012.png)
 
     > ggmap(chicago) + 
     +   geom_point(data = mvt[1:1000,], 
